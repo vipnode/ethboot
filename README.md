@@ -1,0 +1,2 @@
+# ethboot
+Bootnode for Ethereum.
