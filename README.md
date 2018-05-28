@@ -1,5 +1,9 @@
 # ethboot
+
 Bootnode for Ethereum.
+
+Protip: Don't run with `--nodiscover` when trying to use `--bootnodes` for
+discovery.
 
 ## Appendix
 
