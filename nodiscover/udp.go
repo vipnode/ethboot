@@ -1,3 +1,4 @@
+// Based on code from https://github.com/ethereum/go-ethereum/tree/38c7eb0f26eaa8df229d27e92f12e253313a6c8d/p2p/discover
 package nodiscover
 
 import (
@@ -114,6 +115,24 @@ func makeEndpoint(addr *net.UDPAddr, tcpPort uint16) rpcEndpoint {
 	return rpcEndpoint{IP: ip, UDP: uint16(addr.Port), TCP: tcpPort}
 }
 
+// validateNode is borrowed from Node.validateComplete() in go-ethereum/p2p/discover/node.go
+func validateNode(n *discover.Node) error {
+	if n.Incomplete() {
+		return errors.New("incomplete node")
+	}
+	if n.UDP == 0 {
+		return errors.New("missing UDP port")
+	}
+	if n.TCP == 0 {
+		return errors.New("missing TCP port")
+	}
+	if n.IP.IsMulticast() || n.IP.IsUnspecified() {
+		return errors.New("invalid IP (multicast/unspecified)")
+	}
+	_, err := n.ID.Pubkey() // validate the key (on curve, etc.)
+	return err
+}
+
 func (t *udp) nodeFromRPC(sender *net.UDPAddr, rn rpcNode) (*discover.Node, error) {
 	if rn.UDP <= 1024 {
 		return nil, errors.New("low port")
@@ -125,7 +144,9 @@ func (t *udp) nodeFromRPC(sender *net.UDPAddr, rn rpcNode) (*discover.Node, erro
 		return nil, errors.New("not contained in netrestrict whitelist")
 	}
 	n := discover.NewNode(rn.ID, rn.IP, rn.UDP, rn.TCP)
-	// XXX: err := n.validateComplete()
+	if err := validateNode(n); err != nil {
+		return nil, err
+	}
 	return n, nil
 }
 
@@ -417,7 +438,7 @@ func (t *udp) loop() {
 			if contTimeouts > ntpFailureThreshold {
 				if time.Since(ntpWarnTime) >= ntpWarningCooldown {
 					ntpWarnTime = time.Now()
-					// XXX: go checkClockDrift()
+					go checkClockDrift()
 				}
 				contTimeouts = 0
 			}
