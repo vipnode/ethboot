@@ -180,7 +180,6 @@ type udp struct {
 	nat     nat.Interface
 
 	mutex sync.Mutex
-	*discover.Table
 }
 
 // pending represents a pending reply.
@@ -239,17 +238,7 @@ type Config struct {
 	Unhandled    chan<- ReadPacket // unhandled packets are sent on this channel
 }
 
-// ListenUDP returns a new table that listens for UDP packets on laddr.
-func ListenUDP(c conn, cfg Config) (*discover.Table, error) {
-	tab, _, err := newUDP(c, cfg)
-	if err != nil {
-		return nil, err
-	}
-	log.Info("UDP listener up", "self", tab.Self())
-	return tab, nil
-}
-
-func newUDP(c conn, cfg Config) (*discover.Table, *udp, error) {
+func ListenUDP(c conn, cfg Config) (*udp, error) {
 	udp := &udp{
 		conn:        c,
 		priv:        cfg.PrivateKey,
@@ -264,13 +253,10 @@ func newUDP(c conn, cfg Config) (*discover.Table, *udp, error) {
 	}
 	// TODO: separate TCP port
 	udp.ourEndpoint = makeEndpoint(realaddr, uint16(realaddr.Port))
-	// XXX: Fake table
-	tab := &discover.Table{}
-	udp.Table = tab
 
 	go udp.loop()
 	go udp.readLoop(cfg.Unhandled)
-	return udp.Table, udp, nil
+	return udp, nil
 }
 
 func (t *udp) close() {
@@ -366,6 +352,7 @@ func (t *udp) loop() {
 	<-timeout.C // ignore first timeout
 	defer timeout.Stop()
 
+	fmt.Println("XXX", "starting loop")
 	resetTimeout := func() {
 		if plist.Front() == nil || nextTimeout == plist.Front().Value {
 			return
@@ -588,6 +575,7 @@ func decodePacket(buf []byte) (packet, discover.NodeID, []byte, error) {
 }
 
 func (req *ping) handle(t *udp, from *net.UDPAddr, fromID discover.NodeID, mac []byte) error {
+	fmt.Println("ping.handle", fromID)
 	if expired(req.Expiration) {
 		return errExpired
 	}
@@ -606,6 +594,7 @@ func (req *ping) handle(t *udp, from *net.UDPAddr, fromID discover.NodeID, mac [
 func (req *ping) name() string { return "PING/v4" }
 
 func (req *pong) handle(t *udp, from *net.UDPAddr, fromID discover.NodeID, mac []byte) error {
+	fmt.Println("pong.handle", fromID)
 	if expired(req.Expiration) {
 		return errExpired
 	}
@@ -618,6 +607,7 @@ func (req *pong) handle(t *udp, from *net.UDPAddr, fromID discover.NodeID, mac [
 func (req *pong) name() string { return "PONG/v4" }
 
 func (req *findnode) handle(t *udp, from *net.UDPAddr, fromID discover.NodeID, mac []byte) error {
+	fmt.Println("findnode.handle", fromID)
 	if expired(req.Expiration) {
 		return errExpired
 	}
@@ -660,6 +650,7 @@ func (req *findnode) handle(t *udp, from *net.UDPAddr, fromID discover.NodeID, m
 func (req *findnode) name() string { return "FINDNODE/v4" }
 
 func (req *neighbors) handle(t *udp, from *net.UDPAddr, fromID discover.NodeID, mac []byte) error {
+	fmt.Println("neighbors.handle", fromID)
 	if expired(req.Expiration) {
 		return errExpired
 	}
