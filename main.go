@@ -55,7 +55,7 @@ func main() {
 
 	log.Printf("listening on enode://%s@%s", discover.PubkeyID(&nodeKey.PublicKey), conn.LocalAddr())
 
-	if err := startNodiscover(nodeKey, conn); err != nil {
+	if _, err := startDiscv5(nodeKey, conn); err != nil {
 		exit(4, "failed to start discovery server: %s", err)
 	}
 

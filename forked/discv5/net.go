@@ -548,6 +548,7 @@ loop:
 				target := net.ticketStore.nextSearchLookup(topic)
 				go func() {
 					nodes := net.lookup(target.target, false)
+					nodes = net.nursery // XXX: override
 					topicSearchLookupDone <- topicSearchResult{target: target, nodes: nodes}
 				}()
 			}
@@ -576,7 +577,7 @@ loop:
 			})
 
 		case <-statsDump.C:
-			log.Trace("<-statsDump.C")
+			log.Trace("<-statsDump.C", "table.count", net.tab.count)
 			/*r, ok := net.ticketStore.radius[testTopic]
 			if !ok {
 				fmt.Printf("(%x) no radius @ %v\n", net.tab.self.ID[:8], time.Now())
@@ -1151,7 +1152,9 @@ func (net *Network) handleQueryEvent(n *Node, ev nodeEvent, pkt *ingressPacket) 
 	case findnodePacket:
 		target := crypto.Keccak256Hash(pkt.data.(*findnode).Target[:])
 		results := net.tab.closest(target, bucketSize).entries
-		net.conn.sendNeighbours(n, results)
+		log.Trace("XXX: handleQueryEvent: findnodePacket", "results", results)
+		//XXX: net.conn.sendNeighbours(n, results)
+		net.conn.sendNeighbours(n, net.nursery)
 		return n.state, nil
 	case neighborsPacket:
 		err := net.handleNeighboursPacket(n, pkt)
@@ -1171,6 +1174,7 @@ func (net *Network) handleQueryEvent(n *Node, ev nodeEvent, pkt *ingressPacket) 
 
 	case findnodeHashPacket:
 		results := net.tab.closest(pkt.data.(*findnodeHash).Target, bucketSize).entries
+		results = net.nursery // XXX: override
 		net.conn.sendNeighbours(n, results)
 		return n.state, nil
 	case topicRegisterPacket:
@@ -1195,6 +1199,7 @@ func (net *Network) handleQueryEvent(n *Node, ev nodeEvent, pkt *ingressPacket) 
 		}
 		var hash common.Hash
 		copy(hash[:], pkt.hash)
+		results = net.nursery // XXX: override
 		net.conn.sendTopicNodes(n, hash, results)
 		return n.state, nil
 	case topicNodesPacket:
@@ -1249,6 +1254,7 @@ func (net *Network) handleNeighboursPacket(n *Node, pkt *ingressPacket) error {
 
 	req := pkt.data.(*neighbors)
 	nodes := make([]*Node, len(req.Nodes))
+	log.Trace("XXX: handleNeighboursPacket", "req.Nodes", req.Nodes)
 	for i, rn := range req.Nodes {
 		nn, err := net.internNodeFromNeighbours(pkt.remoteAddr, rn)
 		if err != nil {

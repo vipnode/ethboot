@@ -43,7 +43,7 @@ var (
 
 // Timeouts
 const (
-	respTimeout = 500 * time.Millisecond
+	respTimeout = 2000 * time.Millisecond
 	expiration  = 20 * time.Second
 
 	driftThreshold = 10 * time.Second // Allowed clock drift before warning user
