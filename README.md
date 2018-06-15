@@ -7,6 +7,8 @@ discovery.
 
 **Status**: Not usable. Went through a bunch of code with a machete and left a bunch of logging to try and reverse engineer the client behaviour. Might be the basis for something in the future.
 
+Turns out the default client behaviour is not compatible with being forced to use specific nodes via a boot node. Instead, the client will continue to accumulate additional potential nodes by traversing the network, then choose a subset to connect with at ~random.
+
 ## Appendix
 
 ### References
