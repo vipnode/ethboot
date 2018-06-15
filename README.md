@@ -2,14 +2,18 @@
 
 Bootnode for Ethereum.
 
-Protip: Don't run with `--nodiscover` when trying to use `--bootnodes` for
-discovery.
+**Status**: Not usable and suspended.
 
-**Status**: Not usable. Went through a bunch of code with a machete and left a bunch of logging to try and reverse engineer the client behaviour. Might be the basis for something in the future.
+Went through a bunch of code with a machete and left a bunch of logging to try and reverse engineer the client behaviour. Might be the basis for something in the future.
 
 Turns out the default client behaviour is not compatible with being forced to use specific nodes via a boot node. Instead, the client will continue to accumulate additional potential nodes by traversing the network, then choose a subset to connect with at ~random.
 
+Project is suspended until further notice.
+
 ## Appendix
+
+Protip: Don't run with `--nodiscover` when trying to use `--bootnodes` for
+discovery.
 
 ### References
 
