@@ -5,6 +5,8 @@ Bootnode for Ethereum.
 Protip: Don't run with `--nodiscover` when trying to use `--bootnodes` for
 discovery.
 
+**Status**: Not usable. Went through a bunch of code with a machete and left a bunch of logging to try and reverse engineer the client behaviour. Might be the basis for something in the future.
+
 ## Appendix
 
 ### References
